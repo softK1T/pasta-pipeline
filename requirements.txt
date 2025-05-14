@@ -1,0 +1,5 @@
+apache-airflow
+python-dotenv
+pandas
+telethon
+apache-airflow-providers-postgres
