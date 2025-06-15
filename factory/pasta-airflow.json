@@ -1,0 +1,9 @@
+{
+	"name": "pasta-airflow",
+	"location": "polandcentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "7debc72a-00a0-4d63-a60d-3d4ed3ee8489",
+		"tenantId": "262dbaf1-38a1-43f9-a7da-3022da85cc5e"
+	}
+}
