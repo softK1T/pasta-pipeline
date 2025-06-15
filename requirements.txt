@@ -1,5 +1,8 @@
-apache-airflow
-python-dotenv
 pandas
+numpy
+sqlalchemy
+pyodbc
+python-dotenv
 telethon
-apache-airflow-providers-postgres
+aiohttp
+beautifulsoup4
