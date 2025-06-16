@@ -1,30 +1,29 @@
+import datetime
 from datetime import timedelta
 import sys
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 from dotenv import dotenv_values
+from sqlalchemy_utils.types.enriched_datetime.pendulum_datetime import pendulum
 
 sys.path.append('/opt/airflow')
 from processors.db_loader import load_messages_to_db
 from processors.message_scraper import run_scraper
 from processors.telegraph_processor import get_links_to_process, process_telegraph_link_sync
 
-# Then import modules
-# Load environment variables
 config = dotenv_values(".env")
 
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': days_ago(0, 0, 0, 0, 0),
+    'start_date': pendulum.datetime(2025, 6, 16, 12, 0),  # Fixed at UTC+2 14:00
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 0,
     'retry_delay': timedelta(minutes=5),
 }
 
-# Create DAG using context manager
 with DAG(
         'pasta_pipeline',
         default_args=default_args,
@@ -32,7 +31,7 @@ with DAG(
         schedule_interval=timedelta(days=1),
         catchup=False,
         params={
-            "api_id": config.get("API_ID"),  # Use .get() for safer access
+            "api_id": config.get("API_ID"),
             "api_hash": config.get("API_HASH"),
             "phone_number": config.get("PHONE_NUMBER"),
             "all_messages": False,
@@ -43,7 +42,7 @@ with DAG(
     scrape_task = PythonOperator(
         task_id='scrape_telegram_messages',
         python_callable=run_scraper,
-        dag=dag,  # Explicitly set the DAG
+        dag=dag,
     )
 
     load_db_task = PythonOperator(
