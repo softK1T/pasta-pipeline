@@ -1,16 +1,24 @@
 services:
   airflow-webserver:
     build: .
+    mem_limit: 1g
     environment:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=${AIRFLOW_SQL_CONN}
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW__WEBSERVER__SECRET_KEY=${AIRFLOW_SECRET_KEY}
+      - AIRFLOW__WEBSERVER__WORKERS=3
       - API_ID=${API_ID}
       - API_HASH=${API_HASH}
       - PHONE_NUMBER=${PHONE_NUMBER}
       - SESSION_STRING=${SESSION_STRING}
       - AIRFLOW_CONN_POSTGRES_DEFAULT=${AIRFLOW_SQL_CONN}
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_PRE_PING=True
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_RECYCLE=240
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE=3
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_MAX_OVERFLOW=2
+      - AIRFLOW__CORE__STORE_SERIALIZED_DAGS=True
+      - AIRFLOW__CORE__DAG_SERIALIZATION=True
     volumes:
       - ./dags:/opt/airflow/dags
       - ./scripts:/opt/airflow/scripts
@@ -20,10 +28,18 @@ services:
       - ./plugins:/opt/airflow/plugins
     ports:
       - "8080:8080"
-    command: bash -c "airflow db init && airflow users create --username admin --password ${AIRFLOW_ADMIN_PASSWORD} --firstname Admin --lastname User --role Admin --email admin@example.com && airflow webserver"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: bash -c "airflow db migrate && airflow users create --username admin --password ${AIRFLOW_ADMIN_PASSWORD} --firstname Admin --lastname User --role Admin --email admin@example.com && airflow webserver"
 
   airflow-scheduler:
     build: .
+    mem_limit: 1g
+    depends_on:
+      - airflow-webserver
     environment:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=${AIRFLOW_SQL_CONN}
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
@@ -34,10 +50,16 @@ services:
       - PHONE_NUMBER=${PHONE_NUMBER}
       - SESSION_STRING=${SESSION_STRING}
       - AIRFLOW_CONN_POSTGRES_DEFAULT=${AIRFLOW_SQL_CONN}
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_PRE_PING=True
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_RECYCLE=240
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE=3
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_MAX_OVERFLOW=2
+      - AIRFLOW__CORE__STORE_SERIALIZED_DAGS=True
+      - AIRFLOW__CORE__DAG_SERIALIZATION=True
     volumes:
       - ./dags:/opt/airflow/dags
       - ./scripts:/opt/airflow/scripts
       - ./data:/opt/airflow/data
       - ./.env:/opt/airflow/.env
       - ./pasta-session.session:/opt/airflow/pasta-session.session
-    command: bash -c "airflow scheduler"
+    command: bash -c "sleep 30 && airflow scheduler"
