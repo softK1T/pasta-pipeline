@@ -47,7 +47,7 @@ Telegram ➜ Message Scraper ➜ telegram_messages
         Telegraph Processor ➜ telegraph_content
                  │
                  ▼
-      Duplicate Cleanup DAG  (weekly)
+      Duplicate Cleanup DAG  (weekly) (WIP)
 ```
 
 1. **Scrape messages** with Telethon and save raw JSON/CSV artefacts [^2].
@@ -93,7 +93,7 @@ docker compose up ‑-build
 4. **Trigger DAGs**
     * `pasta_pipeline` – main daily incremental run [^1].
     * `pasta_pipeline_full` – manual full back-fill without limits [^1].
-    * `pasta_duplicate_cleanup` – weekly duplicate purge .
+    * `pasta_duplicate_cleanup` – weekly duplicate purge . 
 
 ---
 
