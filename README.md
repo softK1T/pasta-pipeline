@@ -146,16 +146,6 @@ Weekly DAG `pasta_duplicate_cleanup` executes these SQL scripts automatically [^
 
 ---
 
-## 🖥 Development \& Testing
-
-```bash
-# static checks
-ruff check .
-
-# run unit tests
-pytest tests/
-```
-
 Hot-reload Airflow code changes by simply restarting the affected container:
 
 ```bash
@@ -164,18 +154,3 @@ docker compose restart airflow-webserver
 
 
 ---
-
-## 📜 License
-
-Distributed under the MIT License – see `LICENSE` for details .
-
----
-
-Made with ☕, **Airflow**, and a healthy fear of haunted Telegraph pages [^1].
-
-<div style="text-align: center">⁂</div>
-
-[^1]: pasta-pipeline.txt
-
-[^2]: README-1.md
-
