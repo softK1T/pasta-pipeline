@@ -3,3 +3,7 @@ python-dotenv
 pandas
 telethon
 psycopg2-binary==2.9.9
+aiohttp
+beautifulsoup4
+sqlalchemy-utils
+pendulum
