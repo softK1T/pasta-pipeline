@@ -1,9 +1,0 @@
-{
-	"name": "KitAirflowDF",
-	"location": "polandcentral",
-	"identity": {
-		"type": "SystemAssigned",
-		"principalId": "8ef624e8-3897-493e-9b67-39c54cc9bc97",
-		"tenantId": "262dbaf1-38a1-43f9-a7da-3022da85cc5e"
-	}
-}
