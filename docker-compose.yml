@@ -6,21 +6,25 @@ services:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW__WEBSERVER__SECRET_KEY=${AIRFLOW_SECRET_KEY}
+      - AIRFLOW__WEBSERVER__WEB_SERVER_MASTER_TIMEOUT=300
+      - AIRFLOW_CONN_POSTGRES_DEFAULT=${AIRFLOW_SQL_CONN}
       - API_ID=${API_ID}
       - API_HASH=${API_HASH}
       - PHONE_NUMBER=${PHONE_NUMBER}
       - SESSION_STRING=${SESSION_STRING}
-      - AIRFLOW_CONN_POSTGRES_DEFAULT=${AIRFLOW_SQL_CONN}
     volumes:
       - ./dags:/opt/airflow/dags
-      - ./scripts:/opt/airflow/scripts
       - ./data:/opt/airflow/data
       - ./.env:/opt/airflow/.env
-      - ./pasta-session.session:/opt/airflow/pasta-session.session
-      - ./plugins:/opt/airflow/plugins
     ports:
       - "8080:8080"
-    command: bash -c "airflow db init && airflow users create --username admin --password ${AIRFLOW_ADMIN_PASSWORD} --firstname Admin --lastname User --role Admin --email admin@example.com && airflow webserver"
+    restart: unless-stopped
+    command: >
+      bash -c "
+        airflow db init &&
+        airflow users create --username admin --password ${AIRFLOW_ADMIN_PASSWORD} --firstname Admin --lastname User --role Admin --email admin@example.com || true &&
+        airflow webserver --port 8080
+      "
 
   airflow-scheduler:
     build: .
@@ -29,15 +33,14 @@ services:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW__WEBSERVER__SECRET_KEY=${AIRFLOW_SECRET_KEY}
+      - AIRFLOW_CONN_POSTGRES_DEFAULT=${AIRFLOW_SQL_CONN}
       - API_ID=${API_ID}
       - API_HASH=${API_HASH}
       - PHONE_NUMBER=${PHONE_NUMBER}
       - SESSION_STRING=${SESSION_STRING}
-      - AIRFLOW_CONN_POSTGRES_DEFAULT=${AIRFLOW_SQL_CONN}
     volumes:
       - ./dags:/opt/airflow/dags
-      - ./scripts:/opt/airflow/scripts
       - ./data:/opt/airflow/data
       - ./.env:/opt/airflow/.env
-      - ./pasta-session.session:/opt/airflow/pasta-session.session
-    command: bash -c "airflow scheduler"
+    restart: unless-stopped
+    command: bash -c "sleep 15 && airflow scheduler"

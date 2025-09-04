@@ -17,14 +17,17 @@ def load_messages_to_db(**context):
 
     create_table_query = """
     CREATE TABLE IF NOT EXISTS telegram_messages (
-    message_id BIGINT PRIMARY KEY,
-    date TIMESTAMP,
-    text TEXT,
-    views INTEGER,
-    forwards INTEGER,
-    hashtags TEXT[],
-    telegraph_link TEXT,
-    reactions JSONB
+        message_id BIGINT PRIMARY KEY,
+        date TIMESTAMP,
+        text TEXT,
+        views INTEGER,
+        forwards INTEGER,
+        hashtags TEXT[],
+        telegraph_link TEXT,
+        reactions JSONB,
+        scraped_at TIMESTAMP,
+        processed_at TIMESTAMP,
+        last_updated TIMESTAMP
     );
     """
 
@@ -32,13 +35,16 @@ def load_messages_to_db(**context):
         cur.execute(create_table_query)
 
         for _, row in df.iterrows():
+            # Handle telegraph_link field
             if isinstance(row['telegraph_link'], (list, pd.Series, np.ndarray)):
                 telegraph_link = row['telegraph_link'][0] if len(row['telegraph_link']) > 0 else None
             else:
                 telegraph_link = row['telegraph_link'] if not pd.isna(row['telegraph_link']) else None
 
+            # Handle hashtags field
             hashtags = "{" + ",".join(f'"{tag}"' for tag in row['hashtags']) + "}" if row['hashtags'] else None
 
+            # Handle reactions field
             reactions = row.get('reactions', None)
             if isinstance(reactions, dict):
                 reactions = {k: None if isinstance(v, float) and np.isnan(v) else v
@@ -48,8 +54,8 @@ def load_messages_to_db(**context):
 
             upsert_query = """
             INSERT INTO telegram_messages 
-                (message_id, date, text, views, forwards, hashtags, telegraph_link, reactions)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                (message_id, date, text, views, forwards, hashtags, telegraph_link, reactions, scraped_at, processed_at, last_updated)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             ON CONFLICT (message_id) DO UPDATE SET
                 date=EXCLUDED.date,
                 text=EXCLUDED.text,
@@ -57,7 +63,10 @@ def load_messages_to_db(**context):
                 forwards=EXCLUDED.forwards,
                 hashtags=EXCLUDED.hashtags,
                 telegraph_link=EXCLUDED.telegraph_link,
-                reactions=EXCLUDED.reactions;                       
+                reactions=EXCLUDED.reactions,
+                scraped_at=EXCLUDED.scraped_at,
+                processed_at=EXCLUDED.processed_at,
+                last_updated=EXCLUDED.last_updated;                       
             """
 
             cur.execute(upsert_query, (
@@ -68,9 +77,14 @@ def load_messages_to_db(**context):
                 row['forwards'],
                 hashtags,
                 telegraph_link,
-                reactions_json
+                reactions_json,
+                row.get('scraped_at'),
+                row.get('processed_at'),
+                row.get('last_updated')
             ))
 
-            conn.commit()
+            print(f"Upserted message {row} out of {len(df)}")
 
-        return {"message_count": len(df)}
+        conn.commit()
+
+    return {"message_count": len(df)}
